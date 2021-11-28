@@ -1,9 +1,9 @@
-name: Development Environment
+name: Testnet Environment
 
 on:
   push:
     branches:
-      - development
+      - testnet
 
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.15.0
         with:
           channel-id: infrastructure-notifications
-          slack-message: ":pepegalight: STARTED barnbridge-frontend dev build"
+          slack-message: ":building_construction: STARTED barnbridge-frontend testnet build"
 
       - name: Setup Nodejs
         uses: actions/setup-node@v1
@@ -44,12 +44,12 @@ jobs:
         env:
           CI: false
           SKIP_PREFLIGHT_CHECK: true
-          REACT_APP_ENV: 'development'
+          REACT_APP_ENV: 'testnet'
 
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: dev-frontend
+          name: testnet-frontend
           path: build
 
       - name: Notify Slack success
@@ -59,7 +59,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.15.0
         with:
           channel-id: infrastructure-notifications
-          slack-message: ":white_check_mark: barnbridge-frontend dev build"
+          slack-message: ":white_check_mark: barnbridge-frontend testnet build SUCCESSFUL"
 
       - name: Notify Slack failure
         if: failure()
@@ -68,7 +68,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.15.0
         with:
           channel-id: infrastructure-notifications
-          slack-message: ":octagonal_sign: barnbridge-frontend build FAILED"
+          slack-message: ":octagonal_sign: barnbridge-frontend testnet build FAILED"
 
   deploy:
     needs: build
@@ -82,12 +82,12 @@ jobs:
         uses: slackapi/slack-github-action@v1.15.0
         with:
           channel-id: q-xyz-cicd
-          slack-message: ":pepegalight: STARTED barnbridge-frontend dev deployment"
+          slack-message: ":pepegalight: STARTED barnbridge-frontend testnet deployment"
 
       - name: Get artifacts
         uses: actions/download-artifact@v2
         with:
-          name: dev-frontend
+          name: testnet-frontend
 
       - name: Configure AWS credetials
         uses: aws-actions/configure-aws-credentials@v1
@@ -97,14 +97,14 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy static site to S3
-        run: ls -l && aws s3 sync . s3://dev-appdevqxyz-origin --delete
+        run: ls -l && aws s3 sync . s3://testnet-apptestnetqxyz-origin --delete
 
       - name: Invalidate CloudFront cache
         run: |
           #!/usr/bin/env bash
           set -eou pipefail
 
-          CF_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items!=null] | [?contains(Aliases.Items, 'app.dev.q.xyz')].Id | [0]" | tr -d \")
+          CF_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items!=null] | [?contains(Aliases.Items, 'app.testnet.q.xyz')].Id | [0]" | tr -d \")
           echo "Clearing cache for ${CF_DIST_ID}..."
           CF_INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id ${CF_DIST_ID} --paths "/*" | jq -r '.Invalidation.Id')
           while [ $(aws cloudfront get-invalidation --distribution-id ${CF_DIST_ID} --id ${CF_INVALIDATION_ID} | jq -r '.Invalidation.Status') != "Completed" ]; do
@@ -119,7 +119,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.15.0
         with:
           channel-id: infrastructure-notifications
-          slack-message: ":white_check_mark: barnbridge-frontend dev deployment successful"
+          slack-message: ":white_check_mark: barnbridge-frontend testnet deployment successful"
 
       - name: Notify Slack failure
         if: failure()
@@ -128,4 +128,4 @@ jobs:
         uses: slackapi/slack-github-action@v1.15.0
         with:
           channel-id: infrastructure-notifications
-          slack-message: ":octagonal_sign: barnbridge-frontend dev deployment FAILED"
+          slack-message: ":octagonal_sign: barnbridge-frontend testnet deployment FAILED"
