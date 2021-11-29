@@ -44,7 +44,7 @@ jobs:
         env:
           CI: false
           SKIP_PREFLIGHT_CHECK: true
-          REACT_APP_ENV: 'testnet'
+          REACT_APP_ENV: 'development'
 
       - name: Save artifacts
         uses: actions/upload-artifact@v2
