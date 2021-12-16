@@ -19,7 +19,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1
         with:
-          channel_id: C01D16VJ84C
+          channel: infra-ci-barnbridge
           status: BUILD STARTED
           color: warning
 
@@ -60,7 +60,7 @@ jobs:
         uses: voxmedia/github-action-slack-notify-build@v1
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
-          channel_id: C01D16VJ84C
+          channel: infra-ci-barnbridge
           status: BUILD SUCCESSFUL
           color: good
 
@@ -71,7 +71,7 @@ jobs:
         uses: voxmedia/github-action-slack-notify-build@v1
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
-          channel_id: C01D16VJ84C
+          channel: infra-ci-barnbridge
           status: BUILD FAILED
           color: danger
 
@@ -86,7 +86,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         uses: voxmedia/github-action-slack-notify-build@v1
         with:
-          channel_id: C01D16VJ84C
+          channel: infra-ci-barnbridge
           status: DEPLOYMENT STARTED
           color: warning
 
@@ -103,14 +103,14 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy static site to S3
-        run: ls -l && aws s3 sync . s3://prod-appbarnbridgecom-origin --delete
+        run: ls -l && aws s3 sync . s3://prod-appqxyz-origin --delete
 
       - name: Invalidate CloudFront cache
         run: |
           #!/usr/bin/env bash
           set -euo pipefail
 
-          CF_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items!=null] | [?contains(Aliases.Items, 'app.barnbridge.com')].Id | [0]" | tr -d \")
+          CF_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items!=null] | [?contains(Aliases.Items, 'app.q.xyz')].Id | [0]" | tr -d \")
           echo "Clearing cache for ${CF_DIST_ID}..."
           CF_INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id ${CF_DIST_ID} --paths "/*" | jq -r '.Invalidation.Id')
           while [ $(aws cloudfront get-invalidation --distribution-id ${CF_DIST_ID} --id ${CF_INVALIDATION_ID} | jq -r '.Invalidation.Status') != "Completed" ]; do
@@ -125,7 +125,7 @@ jobs:
         uses: voxmedia/github-action-slack-notify-build@v1
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
-          channel_id: C01D16VJ84C
+          channel: infra-ci-barnbridge
           status: DEPLOYMENT SUCCESSFUL
           color: good
 
@@ -136,6 +136,6 @@ jobs:
         uses: voxmedia/github-action-slack-notify-build@v1
         with:
           message_id: ${{ steps.slack.outputs.message_id }}
-          channel_id: C01D16VJ84C
+          channel: infra-ci-barnbridge
           status: DEPLOYMENT FAILED
           color: danger
